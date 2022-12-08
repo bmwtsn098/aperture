@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 rootProject.name = "aperture-java"
 include("lib:core", "lib:armeria", "lib:tomcat7")
 include("examples:armeria-example", "examples:standalone-example", "examples:tomcat-example")
+include("javaagent")

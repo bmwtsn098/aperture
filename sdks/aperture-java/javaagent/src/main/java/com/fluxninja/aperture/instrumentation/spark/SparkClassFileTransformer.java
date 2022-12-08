@@ -6,13 +6,19 @@ import net.bytebuddy.matcher.ElementMatchers;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 
+import static net.bytebuddy.matcher.ElementMatchers.*;
+
 public class SparkClassFileTransformer {
-    static ClassFileTransformer Default(Instrumentation instrumentation) {
+    public static void premain(String arg, Instrumentation instrumentation) {
         return new AgentBuilder.Default()
                 .with(new AgentBuilder.InitializationStrategy.SelfInjection.Eager())
-                .type((ElementMatchers.any()))
+                .type((ElementMatchers.named("spark.route.Routes")))
                 .transform((builder, typeDescription, classLoader, module) -> builder
-                        .method(ElementMatchers.any())
+                        .method(
+                                ElementMatchers.named("find")
+                                        .and(takesArgument(0, named("spark.route.HttpMethod")))
+                                        .and(returns(named("spark.routematch.RouteMatch")))
+                                        .and(isPublic()))
                         .intercept(Advice.to(TimerAdvice.class))
                 ).installOn(instrumentation);
     }
