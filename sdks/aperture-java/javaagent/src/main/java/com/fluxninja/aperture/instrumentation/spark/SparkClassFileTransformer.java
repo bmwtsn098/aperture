@@ -1,28 +1,57 @@
 package com.fluxninja.aperture.instrumentation.spark;
 
+import com.fluxninja.aperture.sdk.ApertureSDK;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 
+import java.lang.Object;
+
 import static net.bytebuddy.matcher.ElementMatchers.*;
 
-public class SparkClassFileTransformer {
+public class SparkClassFileTransformer implements ClassFileTransformer {
+    ApertureSDK apertureSDK;
+
+    public SparkClassFileTransformer(ApertureSDK apertureSDK) {
+        this.apertureSDK = apertureSDK;
+    }
+
     public static void premain(String arg, Instrumentation instrumentation) {
-        return new AgentBuilder.Default()
-                .with(new AgentBuilder.InitializationStrategy.SelfInjection.Eager())
-                .type((ElementMatchers.named("spark.route.Routes")))
-                .transform((builder, typeDescription, classLoader, module) -> builder
+        System.out.println("CREATING AGENT!");
+        new AgentBuilder.Default()
+                .with(new AgentBuilder.InitializationStrategy.SelfInjection.Eager()) // TODO: what does it do
+                .type((ElementMatchers.named("spark.route.Routes"))) // TODO: not this class...
+                .transform((builder, typeDescription, classLoader, module, protectionDomain) -> builder
                         .method(
                                 ElementMatchers.named("find")
                                         .and(takesArgument(0, named("spark.route.HttpMethod")))
                                         .and(returns(named("spark.routematch.RouteMatch")))
                                         .and(isPublic()))
-                        .intercept(Advice.to(TimerAdvice.class))
+                        .intercept(MethodDelegation.to(SparkApertureInterceptor.class))
                 ).installOn(instrumentation);
     }
 }
+
+// Method changed by opentelemetry instrumentation:
+/*
+    named("find")
+            .and(takesArgument(0, named("spark.route.HttpMethod")))
+            .and(returns(named("spark.routematch.RouteMatch")))
+            .and(isPublic())
+ */
+// Methods that we'd like to intercept but not sure how yet
+/*
+    takesArgument(0, named("spark.Request"))
+            .and(takesArgument(1, named("spark.Response")))
+            .and(returns(named("java.lang.Object")))
+            .and(isPublic())
+ */
+
 
 /*
 import java.lang.instrument.ClassFileTransformer;
