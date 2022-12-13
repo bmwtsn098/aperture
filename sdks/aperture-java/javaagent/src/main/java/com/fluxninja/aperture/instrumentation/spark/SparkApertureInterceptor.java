@@ -32,7 +32,7 @@ public class SparkApertureInterceptor {
         if (flow.accepted()) {
             System.out.println("FLOW ALLOWED");
             flow.end(FlowStatus.OK);
-            return superMethod.invoke(SparkApertureInterceptor.class, allArguments);
+            return callableMethod.call();
         } else {
             System.out.println("FLOW REJECTED");
             flow.end(FlowStatus.Error);
