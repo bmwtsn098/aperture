@@ -2,6 +2,7 @@ package com.fluxninja.aperture.instrumentation.spark;
 
 import com.fluxninja.aperture.sdk.ApertureSDK;
 import com.fluxninja.aperture.sdk.Flow;
+import com.fluxninja.aperture.sdk.FlowStatus;
 import net.bytebuddy.implementation.bind.annotation.*;
 
 import java.lang.reflect.Method;
@@ -30,9 +31,11 @@ public class SparkApertureInterceptor {
         Flow flow = apertureSDK.startFlow("awesomeFeature", labels);
         if (flow.accepted()) {
             System.out.println("FLOW ALLOWED");
+            flow.end(FlowStatus.OK);
             return superMethod.invoke(SparkApertureInterceptor.class, allArguments);
         } else {
             System.out.println("FLOW REJECTED");
+            flow.end(FlowStatus.Error);
             return null;
         }
     }

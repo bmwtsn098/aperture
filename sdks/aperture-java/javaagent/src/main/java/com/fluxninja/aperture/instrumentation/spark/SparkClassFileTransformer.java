@@ -1,11 +1,14 @@
 package com.fluxninja.aperture.instrumentation.spark;
 
+import com.fluxninja.aperture.instrumentation.ApertureInstrumentationAgent;
 import com.fluxninja.aperture.sdk.ApertureSDK;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -16,6 +19,7 @@ import static net.bytebuddy.matcher.ElementMatchers.*;
 
 public class SparkClassFileTransformer implements ClassFileTransformer {
     ApertureSDK apertureSDK;
+    private static Logger LOGGER = LoggerFactory.getLogger(ApertureInstrumentationAgent.class);
 
     public SparkClassFileTransformer(ApertureSDK apertureSDK) {
         this.apertureSDK = apertureSDK;
@@ -23,6 +27,7 @@ public class SparkClassFileTransformer implements ClassFileTransformer {
 
     public static void premain(String arg, Instrumentation instrumentation) {
         System.out.println("CREATING AGENT!");
+        LOGGER.error("CREATING AGENT!");
         new AgentBuilder.Default()
                 .with(new AgentBuilder.InitializationStrategy.SelfInjection.Eager()) // TODO: what does it do
                 .type((ElementMatchers.named("spark.route.Routes"))) // TODO: not this class...
